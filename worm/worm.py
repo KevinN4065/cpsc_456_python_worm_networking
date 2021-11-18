@@ -35,7 +35,7 @@ def isInfectedSystem():
 def markInfected():
 	
 	#from os import
-	#w = open for writing, truncating the file first 
+	#os.mknod creates a filesystem node (file, device special file or named pipe) 
 	os.mknod(INFECTED_MARKER_FILE)
 
 
