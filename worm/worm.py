@@ -36,9 +36,7 @@ def markInfected():
 	
 	#from os import
 	#w = open for writing, truncating the file first 
-	with open('bee.txt', 'r') as normie, open(INFECTED_MARKER_FILE, 'w') as bee:
-		for line in normie:
-			bee.write(line)
+	os.mknod(INFECTED_MARKER_FILE)
 
 
 ###############################################################
