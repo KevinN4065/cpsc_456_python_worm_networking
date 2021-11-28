@@ -119,12 +119,12 @@ def tryCredentials(host, userName, password, sshClient):
 		#connect takes 4 parameters, host, part, username, password, but we can ignore the port
 		#following the handout 
 		sshClient.connect(host, username=userName, password=password) 
-		print("connected, we're in hackerman")
+		print("yoooooo, we're in man")
 	except paramiko.SSHException:
 		print("YOOOOOOOOOO, WRONG CREDENTIALS")
 		return 1
 	except socket.error: #yo this stuff is bumpin 
-		print("Yo the server is probably dead or the SSH ain't running")
+		print("this server is probably dead so i'm just like YOOOOOOOOOOOOOOOOOO")
 		return 3
 
 	#if nothing is wrong then just return 0 
